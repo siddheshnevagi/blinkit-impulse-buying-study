@@ -1,0 +1,19 @@
+{
+  "name": "blinkit-impulse-buying-study",
+  "version": "1.0.0",
+  "description": "Interactive survey + behavioural experiment collecting data on impulse buying triggered by quick-commerce app design (Blinkit).",
+  "type": "module",
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "dev:env": "node --env-file=.env --watch server/server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "exceljs": "^4.4.0",
+    "pg": "^8.13.1"
+  }
+}
