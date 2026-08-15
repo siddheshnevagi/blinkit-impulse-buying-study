@@ -8,9 +8,12 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
-const connectionString = process.env.DATABASE_URL;
+// POSTGRES_URL is what Vercel's native Supabase integration injects (already the
+// pooled/serverless-safe connection string). DATABASE_URL is kept as a fallback so the
+// same code works with a manually-configured Postgres/Supabase connection.
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 if (!connectionString) {
-  console.warn('DATABASE_URL is not set — database calls will fail until it is configured.');
+  console.warn('POSTGRES_URL / DATABASE_URL is not set — database calls will fail until one is configured.');
 }
 
 const pool = new pg.Pool({
