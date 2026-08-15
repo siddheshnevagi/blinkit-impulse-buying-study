@@ -17,11 +17,6 @@ export default function renderLanding(container, ctx) {
       el('ul', { class: 'section-list' }, sections.map(([icon, label]) =>
         el('li', {}, el('div', { class: 'section-item' }, [el('span', { class: 'section-item__icon' }, icon), el('span', {}, label)]))
       )),
-      el('div', { class: 'stat-row' }, [
-        el('div', { class: 'stat' }, [el('b', {}, '8–10'), el('span', {}, 'minutes')]),
-        el('div', { class: 'stat' }, [el('b', {}, '100%'), el('span', {}, 'anonymous')]),
-        el('div', { class: 'stat' }, [el('b', {}, '18+'), el('span', {}, 'only')]),
-      ]),
     ]),
     el('div', { class: 'step-actions step-actions--end' }, [
       el('button', { class: 'btn btn--accent btn--block', onClick: ctx.goNext }, 'Let\'s start →'),
