@@ -1,7 +1,8 @@
 // Vignette battery. Each scenario is a short, realistic Blinkit moment rendered as a
-// mock phone screen. Every scenario captures: a likelihood rating, an agreement rating,
-// and the decision time (ms from render to first answer) as a behavioural proxy for
-// how "gut-level" versus deliberated the reaction was.
+// mock phone screen. Every scenario captures a single likelihood rating plus the
+// decision time (ms from render to answer) as a behavioural proxy for how "gut-level"
+// versus deliberated the reaction was — one question per scenario, kept short on
+// purpose so the battery stays quick to complete.
 //
 // mock: describes the phone-mock UI so the renderer can build it without images.
 export const SCENARIOS = [
@@ -12,7 +13,6 @@ export const SCENARIOS = [
     situation: 'It\'s 11 PM. You open the app only to buy milk. On the home screen, a snack you love shows "Only 2 left" and "Delivered in 12 minutes."',
     mock: { type: 'home_badge', badge: 'Only 2 left', eta: '12 mins', product: 'Your favourite snack' },
     likelihood: 'I would add the snack to my cart.',
-    agreement: 'In that moment, my decision is driven more by the app than by my own plan.',
   },
   {
     code: 'E2',
@@ -21,7 +21,6 @@ export const SCENARIOS = [
     situation: 'Your cart total is ₹170. A banner reads "Add ₹30 more to get FREE delivery."',
     mock: { type: 'threshold', cartTotal: 170, need: 30, label: 'FREE delivery' },
     likelihood: 'I would add another item just to cross the free-delivery amount.',
-    agreement: 'I feel nudged into spending more than I intended.',
   },
   {
     code: 'E3',
@@ -30,7 +29,6 @@ export const SCENARIOS = [
     situation: 'At checkout, the app shows a "You might also like" row with three items matched to your past orders.',
     mock: { type: 'recs', items: ['Chips', 'Choco bar', 'Cold drink'] },
     likelihood: 'I would add at least one of these items.',
-    agreement: 'I feel gently steered rather than freely choosing.',
   },
   {
     code: 'E4',
@@ -39,7 +37,6 @@ export const SCENARIOS = [
     situation: 'You open the app to buy milk. The home screen is taken over by a festive "Rakhi Specials" banner — rakhis, gifting combos, sweets — none of which you came for.',
     mock: { type: 'festive_takeover', theme: 'Rakhi Specials', items: ['Kids Rakhi', 'Gifting combo', 'Festive sweets box'] },
     likelihood: 'I would browse the festive rail even though I didn\'t come for it.',
-    agreement: 'The occasion on screen makes me want to buy something I don\'t actually need.',
   },
   {
     code: 'E5',
@@ -48,7 +45,6 @@ export const SCENARIOS = [
     situation: 'You search for one bottle of a soft drink. Before adding to cart, a pop-up shows Pack of 1 / Pack of 2 / Pack of 4 — the bigger pack is marked as better value per bottle.',
     mock: { type: 'pack_picker', options: [{ label: 'Pack of 1', price: 38, unit: '₹38/bottle' }, { label: 'Pack of 2', price: 75, unit: '₹37.5/bottle' }, { label: 'Pack of 4', price: 151, unit: '₹37.8/bottle', tag: 'Best value' }] },
     likelihood: 'I would pick a bigger pack than I actually needed.',
-    agreement: 'I end up buying more than I need because the bigger pack looks like the smarter deal.',
   },
   {
     code: 'E6',
@@ -57,7 +53,6 @@ export const SCENARIOS = [
     situation: 'Your ₹95 item balloons to a ₹150 bill after a delivery charge, a handling charge and a "small cart" charge — with a note that the small-cart charge disappears above ₹99.',
     mock: { type: 'bill_breakdown', itemsTotal: 95, delivery: 30, handling: 5, smallCart: 20, total: 150, waiver: 99 },
     likelihood: 'I would add another item purely to dodge the small-cart charge.',
-    agreement: 'I don\'t usually notice how much these small charges add up to over a month.',
   },
   {
     code: 'E7',
@@ -66,7 +61,6 @@ export const SCENARIOS = [
     situation: 'You search for something completely unrelated. The results page resurfaces snacks tagged "Bought earlier" that you used to order often.',
     mock: { type: 'bought_earlier', items: ['KitKat', 'Kinder Joy', 'Munch'] },
     likelihood: 'I would add one of these familiar items even though I searched for something else.',
-    agreement: 'Seeing my old favourites pulls me back into a habit I wasn\'t planning to repeat today.',
   },
   {
     code: 'E8',
@@ -75,7 +69,6 @@ export const SCENARIOS = [
     situation: 'The moment you open the app, a full-screen pop-up greets you: "Special offer for you! Now pay ₹0 charges on all orders above ₹149."',
     mock: { type: 'popup_offer', headline: 'Now pay ₹0 charges*', condition: 'on all orders above ₹149' },
     likelihood: 'This offer would make me add more items to reach ₹149, even if I opened the app for one thing.',
-    agreement: 'This kind of offer feels designed to make me spend more, not to save me money.',
     optional: true,
   },
 ];

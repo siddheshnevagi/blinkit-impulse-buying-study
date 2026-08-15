@@ -10,7 +10,7 @@ export default function renderLanding(container, ctx) {
   const node = el('div', { class: 'step' }, [
     el('div', { class: 'card' }, [
       el('div', { class: 'hero-illustration' }, '🛵'),
-      el('div', { class: 'eyebrow' }, 'A Consumer Behaviour study · ~4–5 min'),
+      el('div', { class: 'eyebrow' }, 'A Consumer Behaviour study'),
       el('h1', {}, 'Ever ordered something on Blinkit you never meant to buy?'),
       el('p', { class: 'lede' }, 'This short interactive study looks at how quick-commerce apps shape real shopping decisions. It mixes quick questions with a few realistic scenarios and one tiny hands-on task — no two people will answer exactly the same way, and that\'s the point.'),
       el('ul', { class: 'section-list' }, sections.map(([icon, label]) =>

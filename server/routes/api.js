@@ -133,13 +133,13 @@ router.post('/respondents/:uuid/likert', requireRespondent, asyncRoute(async (re
 
 // --- scenario response -----------------------------------------------------------
 router.post('/respondents/:uuid/scenario', requireRespondent, asyncRoute(async (req, res) => {
-  const { scenarioCode, likelihood, agreement, decisionTimeMs, changedMind } = req.body || {};
+  const { scenarioCode, likelihood, decisionTimeMs, changedMind } = req.body || {};
   await query(
-    `INSERT INTO scenario_responses (respondent_id, scenario_code, likelihood_value, agreement_value, decision_time_ms, changed_mind)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO scenario_responses (respondent_id, scenario_code, likelihood_value, decision_time_ms, changed_mind)
+     VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (respondent_id, scenario_code) DO UPDATE SET likelihood_value=excluded.likelihood_value,
-       agreement_value=excluded.agreement_value, decision_time_ms=excluded.decision_time_ms, changed_mind=excluded.changed_mind`,
-    [req.respondentId, scenarioCode, likelihood, agreement, decisionTimeMs ?? null, changedMind ? 1 : 0]
+       decision_time_ms=excluded.decision_time_ms, changed_mind=excluded.changed_mind`,
+    [req.respondentId, scenarioCode, likelihood, decisionTimeMs ?? null, changedMind ? 1 : 0]
   );
   res.json({ ok: true });
 }));

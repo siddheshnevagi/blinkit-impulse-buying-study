@@ -70,7 +70,6 @@ export async function buildWorkbook() {
   }
   for (const sc of SCENARIOS) {
     codebook.addRow({ col: `${sc.code}_likelihood`, section: `Scenario ${sc.code}`, role: 'behavioral intention', text: sc.situation, scale: '1 Very unlikely – 5 Very likely' });
-    codebook.addRow({ col: `${sc.code}_agreement`, section: `Scenario ${sc.code}`, role: 'attitude', text: sc.agreement, scale: '1 Strongly disagree – 5 Strongly agree' });
     codebook.addRow({ col: `${sc.code}_decision_ms`, section: `Scenario ${sc.code}`, role: 'behavioral (indirect)', text: 'Time from scenario shown to first answer', scale: 'milliseconds' });
   }
   codebook.addRow({ col: '(see Respondents_Wide header comments)', section: 'Profile / Usage / Order history / Experiment / Cart simulation', role: '—', text: 'Plain-language field names, self-explanatory', scale: 'various' });
@@ -110,7 +109,6 @@ export async function buildWorkbook() {
   ];
   const scenarioCols = allScenarioCodes.flatMap((code) => [
     { header: `${code}_likelihood`, key: `${code}_likelihood`, width: 14 },
-    { header: `${code}_agreement`, key: `${code}_agreement`, width: 14 },
     { header: `${code}_decision_ms`, key: `${code}_decision_ms`, width: 16 },
   ]);
   const experimentCols = [
@@ -194,7 +192,6 @@ export async function buildWorkbook() {
     for (const code of allScenarioCodes) {
       const s = scenarioMap[code];
       rowObj[`${code}_likelihood`] = s ? s.likelihood_value : null;
-      rowObj[`${code}_agreement`] = s ? s.agreement_value : null;
       rowObj[`${code}_decision_ms`] = s ? s.decision_time_ms : null;
     }
     for (const code of allItemCodes) rowObj[code] = likertMap[code] ?? null;
@@ -223,7 +220,6 @@ export async function buildWorkbook() {
     { header: 'respondent_id', key: 'respondent_id', width: 12 },
     { header: 'scenario_code', key: 'scenario_code', width: 12 },
     { header: 'likelihood_value', key: 'likelihood_value', width: 14 },
-    { header: 'agreement_value', key: 'agreement_value', width: 14 },
     { header: 'decision_time_ms', key: 'decision_time_ms', width: 16 },
     { header: 'changed_mind', key: 'changed_mind', width: 12 },
   ];

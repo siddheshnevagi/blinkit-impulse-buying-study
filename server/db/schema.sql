@@ -77,11 +77,16 @@ CREATE TABLE IF NOT EXISTS scenario_responses (
   respondent_id      INTEGER NOT NULL REFERENCES respondents(id) ON DELETE CASCADE,
   scenario_code      TEXT NOT NULL,
   likelihood_value   INTEGER NOT NULL,
-  agreement_value    INTEGER NOT NULL,
   decision_time_ms   INTEGER,
   changed_mind       INTEGER DEFAULT 0,
   UNIQUE(respondent_id, scenario_code)
 );
+
+-- Each scenario now asks a single likelihood question instead of a paired
+-- likelihood+agreement question (the agreement rating was redundant with the
+-- likelihood rating in practice). Drops the column on deployments created before
+-- this change; a no-op on fresh installs.
+ALTER TABLE scenario_responses DROP COLUMN IF EXISTS agreement_value;
 
 CREATE TABLE IF NOT EXISTS experiment_responses (
   respondent_id             INTEGER PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,

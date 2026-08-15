@@ -114,9 +114,9 @@ export default function renderScenarios(container, ctx) {
 
     const shownAt = performance.now();
     let firstAnswerAt = null;
-    let likelihoodAnswered = false, agreementAnswered = false;
-    let likelihoodChanged = false, agreementChanged = false;
-    let likelihoodValue = null, agreementValue = null;
+    let likelihoodAnswered = false;
+    let likelihoodChanged = false;
+    let likelihoodValue = null;
 
     const dots = el('div', { class: 'scenario-progress' }, SCENARIOS.map((_, i) =>
       el('div', { class: 'scenario-progress__dot' + (i < idx ? ' is-done' : i === idx ? ' is-current' : '') })
@@ -124,10 +124,6 @@ export default function renderScenarios(container, ctx) {
 
     const nextBtn = el('button', { class: 'btn btn--accent' }, idx === SCENARIOS.length - 1 ? 'Continue' : 'Next scenario');
     nextBtn.disabled = true;
-
-    function maybeEnable() {
-      if (likelihoodAnswered && agreementAnswered) nextBtn.disabled = false;
-    }
 
     const likelihoodRow = likertRow({
       text: sc.likelihood,
@@ -137,18 +133,7 @@ export default function renderScenarios(container, ctx) {
         else likelihoodChanged = likelihoodAnswered ? true : likelihoodChanged;
         likelihoodAnswered = true;
         likelihoodValue = v;
-        maybeEnable();
-      },
-    });
-    const agreementRow = likertRow({
-      text: sc.agreement,
-      leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree',
-      onAnswer: (v) => {
-        if (firstAnswerAt === null) firstAnswerAt = performance.now();
-        else agreementChanged = agreementAnswered ? true : agreementChanged;
-        agreementAnswered = true;
-        agreementValue = v;
-        maybeEnable();
+        nextBtn.disabled = false;
       },
     });
 
@@ -158,7 +143,7 @@ export default function renderScenarios(container, ctx) {
         dots,
         el('div', { class: 'situation' }, sc.situation),
         renderMock(sc.mock),
-        el('div', { class: 'likert', style: 'margin-top:16px' }, [likelihoodRow, agreementRow]),
+        el('div', { class: 'likert', style: 'margin-top:16px' }, [likelihoodRow]),
       ]),
       el('div', { class: 'step-actions' }, [
         el('button', { class: 'btn btn--ghost', onClick: () => {
@@ -174,9 +159,8 @@ export default function renderScenarios(container, ctx) {
       await ctx.api.saveScenario(ctx.state.uuid, {
         scenarioCode: sc.code,
         likelihood: likelihoodValue,
-        agreement: agreementValue,
         decisionTimeMs,
-        changedMind: likelihoodChanged || agreementChanged,
+        changedMind: likelihoodChanged,
       });
       if (idx === SCENARIOS.length - 1) ctx.goNext();
       else { ctx.state.scenarioIndex += 1; mount(); }
