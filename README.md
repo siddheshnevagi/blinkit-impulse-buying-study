@@ -33,20 +33,20 @@ column meanings are also baked into the Excel export automatically (`Codebook` s
 
 ## Live deployment (Vercel + Supabase)
 
-This is how the hosted version runs, and how to redeploy or fork it:
+This is how the hosted version runs, and how to redeploy or fork it. The easiest path
+uses **Vercel's native Supabase integration**, which provisions a Supabase project and
+wires the connection string in for you — no manual connection-string copying:
 
-1. **Create a Supabase project** (free tier) at [supabase.com](https://supabase.com) →
-   New project. Once it's up, go to **Project Settings → Database → Connection string**
-   and copy the **Transaction pooler** URI (port `6543`) — this is the one that works
-   from serverless functions. It looks like:
-   `postgresql://postgres.xxxxxxxx:[YOUR-PASSWORD]@aws-0-REGION.pooler.supabase.com:6543/postgres`
-2. **Import the repo into Vercel** (New Project → import this GitHub repo). Vercel
+1. **Import the repo into Vercel** (New Project → import this GitHub repo). Vercel
    auto-detects `vercel.json` (static files served from `public/`, `api/index.js` as
    the serverless function for all `/api/*` and `/admin/api/*` traffic).
-3. In the Vercel project's **Settings → Environment Variables**, add:
-   - `DATABASE_URL` — the Supabase connection string from step 1
-   - `ADMIN_PASSWORD` — whatever you want the `/admin` password to be
-   Redeploy after adding them (or they apply to the next deploy automatically).
+2. In the Vercel project, go to **Storage → Browse Marketplace → Supabase** and connect
+   (or create) a Supabase project, then hit **Resync Environment Variables**. This
+   populates `POSTGRES_URL` (already the pooled, serverless-safe connection string —
+   `server/db/db.js` reads this automatically) across Production/Preview/Development.
+3. Add one more variable yourself in **Settings → Environment Variables**:
+   `ADMIN_PASSWORD` — whatever you want the `/admin` dashboard password to be. Redeploy
+   after adding it.
 4. **Initialize the schema once**, from anywhere with `curl`:
    ```bash
    curl -X POST https://<your-app>.vercel.app/admin/api/migrate -u admin:<ADMIN_PASSWORD>
@@ -54,6 +54,13 @@ This is how the hosted version runs, and how to redeploy or fork it:
    This is idempotent — safe to run again after any future schema changes.
 5. Open `https://<your-app>.vercel.app` — the whole study works end to end, and
    `/admin` shows live response counts plus the Excel download.
+
+**Manual Supabase route (no Vercel integration):** create a project at
+[supabase.com](https://supabase.com), then Project Settings → Database → Connection
+string → **Transaction pooler** tab (port `6543`) — this is the one that works from
+serverless functions, the direct connection (port `5432`) often only resolves over
+IPv6 and will fail to connect. Set it as `DATABASE_URL` (used as a fallback if
+`POSTGRES_URL` isn't present) in step 3 above instead.
 
 No other setup is needed. There's no build step (plain HTML/CSS/JS front end), so
 every push to the connected GitHub branch redeploys automatically via Vercel.
