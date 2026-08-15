@@ -22,6 +22,24 @@ function basicAuth(req, res, next) {
 
 router.use(basicAuth);
 
+// TEMPORARY diagnostic — reveals only hostname/port/query-params, never credentials.
+router.get('/debug-db', (req, res) => {
+  const raw = process.env.POSTGRES_URL || process.env.DATABASE_URL || '';
+  try {
+    const u = new URL(raw);
+    res.json({
+      hasEnv: !!raw,
+      protocol: u.protocol,
+      hostname: u.hostname,
+      port: u.port,
+      pathname: u.pathname,
+      searchParams: Object.fromEntries(u.searchParams),
+    });
+  } catch (e) {
+    res.json({ hasEnv: !!raw, parseError: e.message });
+  }
+});
+
 // One-time (idempotent) schema setup — call this once after DATABASE_URL is configured,
 // and again safely any time after (CREATE TABLE IF NOT EXISTS / CREATE INDEX IF NOT EXISTS).
 router.post('/migrate', async (req, res, next) => {
