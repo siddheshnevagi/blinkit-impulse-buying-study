@@ -132,6 +132,11 @@ export async function buildWorkbook() {
     { header: 'cart_unplanned_items_added', key: 'cart_unplanned_items_added', width: 20 },
     { header: 'cart_crossed_free_delivery_threshold', key: 'cart_crossed_free_delivery_threshold', width: 24 },
     { header: 'cart_items_added_after_threshold_nudge', key: 'cart_items_added_after_threshold_nudge', width: 26 },
+    { header: 'cart_items_added_after_any_checkout_view', key: 'cart_items_added_after_any_checkout_view', width: 28 },
+    { header: 'cart_checkout_view_count', key: 'cart_checkout_view_count', width: 18 },
+    { header: 'cart_shop_return_count', key: 'cart_shop_return_count', width: 18 },
+    { header: 'cart_categories_browsed_count', key: 'cart_categories_browsed_count', width: 22 },
+    { header: 'cart_categories_browsed', key: 'cart_categories_browsed', width: 30 },
     { header: 'cart_clicked_scarcity_item', key: 'cart_clicked_scarcity_item', width: 20 },
     { header: 'cart_clicked_recommended_item', key: 'cart_clicked_recommended_item', width: 22 },
     { header: 'cart_clicked_festive_item', key: 'cart_clicked_festive_item', width: 20 },
@@ -184,6 +189,9 @@ export async function buildWorkbook() {
       cart_planned_items_added: cs.planned_items_added, cart_unplanned_items_added: cs.unplanned_items_added,
       cart_crossed_free_delivery_threshold: cs.crossed_free_delivery_threshold,
       cart_items_added_after_threshold_nudge: cs.items_added_after_threshold_nudge,
+      cart_items_added_after_any_checkout_view: cs.items_added_after_any_checkout_view,
+      cart_checkout_view_count: cs.checkout_view_count, cart_shop_return_count: cs.shop_return_count,
+      cart_categories_browsed_count: cs.categories_browsed_count, cart_categories_browsed: safeJson(cs.categories_browsed).join('; '),
       cart_clicked_scarcity_item: cs.clicked_scarcity_item, cart_clicked_recommended_item: cs.clicked_recommended_item,
       cart_clicked_festive_item: cs.clicked_festive_item, cart_clicked_bought_earlier_item: cs.clicked_bought_earlier_item,
       cart_total_time_ms: cs.total_time_ms, cart_noticed_fees: cs.noticed_fees,
@@ -251,6 +259,7 @@ export async function buildWorkbook() {
     { header: 'product_tags', key: 'product_tags', width: 24 },
     { header: 'cart_total_at_event', key: 'cart_total_at_event', width: 18 },
     { header: 'timestamp_offset_ms', key: 'timestamp_offset_ms', width: 18 },
+    { header: 'meta', key: 'meta', width: 40 },
   ];
   styleHeader(cartEvents.getRow(1));
   for (const r of await all('SELECT * FROM cart_sim_events ORDER BY respondent_id, event_seq')) cartEvents.addRow(r);

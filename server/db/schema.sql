@@ -104,14 +104,21 @@ CREATE TABLE IF NOT EXISTS cart_sim_events (
   id                      SERIAL PRIMARY KEY,
   respondent_id           INTEGER NOT NULL REFERENCES respondents(id) ON DELETE CASCADE,
   event_seq               INTEGER NOT NULL,
-  event_type              TEXT NOT NULL,
+  event_type              TEXT NOT NULL, -- add_to_cart | remove_from_cart | category_filter | checkout_viewed
+                                          -- | back_to_shop | threshold_crossed | place_order
   product_id              TEXT,
   product_name            TEXT,
   product_price           REAL,
   product_tags            TEXT, -- JSON array
   cart_total_at_event     REAL,
-  timestamp_offset_ms     INTEGER
+  timestamp_offset_ms     INTEGER,
+  meta                    TEXT  -- JSON object, event-type-specific extra detail (see README)
 );
+
+-- Full click-by-click log gets a `meta` column for event-specific detail (category
+-- browsed, which threshold was crossed and in which direction, how many times checkout
+-- had already been seen at the moment of an add/remove). A no-op on fresh installs.
+ALTER TABLE cart_sim_events ADD COLUMN IF NOT EXISTS meta TEXT;
 
 CREATE TABLE IF NOT EXISTS cart_sim_summary (
   respondent_id                        INTEGER PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,
@@ -121,6 +128,11 @@ CREATE TABLE IF NOT EXISTS cart_sim_summary (
   unplanned_items_added                INTEGER,
   crossed_free_delivery_threshold      INTEGER,
   items_added_after_threshold_nudge    INTEGER,
+  items_added_after_any_checkout_view  INTEGER,
+  checkout_view_count                  INTEGER,
+  shop_return_count                    INTEGER,
+  categories_browsed_count             INTEGER,
+  categories_browsed                   TEXT, -- JSON array, in the order first browsed
   clicked_scarcity_item                INTEGER,
   clicked_recommended_item             INTEGER,
   clicked_festive_item                 INTEGER,
@@ -128,6 +140,15 @@ CREATE TABLE IF NOT EXISTS cart_sim_summary (
   total_time_ms                        INTEGER,
   noticed_fees                         INTEGER
 );
+
+-- New behavioural-path columns: how many times the fee breakdown was seen, how many
+-- times the respondent bounced back to shopping, and which category rails they
+-- browsed. A no-op on fresh installs.
+ALTER TABLE cart_sim_summary ADD COLUMN IF NOT EXISTS items_added_after_any_checkout_view INTEGER;
+ALTER TABLE cart_sim_summary ADD COLUMN IF NOT EXISTS checkout_view_count INTEGER;
+ALTER TABLE cart_sim_summary ADD COLUMN IF NOT EXISTS shop_return_count INTEGER;
+ALTER TABLE cart_sim_summary ADD COLUMN IF NOT EXISTS categories_browsed_count INTEGER;
+ALTER TABLE cart_sim_summary ADD COLUMN IF NOT EXISTS categories_browsed TEXT;
 
 CREATE TABLE IF NOT EXISTS debrief (
   respondent_id         INTEGER PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,

@@ -169,9 +169,9 @@ router.post('/respondents/:uuid/cart-events', requireRespondent, asyncRoute(asyn
   for (let idx = 0; idx < list.length; idx++) {
     const e = list[idx];
     await query(
-      `INSERT INTO cart_sim_events (respondent_id, event_seq, event_type, product_id, product_name, product_price, product_tags, cart_total_at_event, timestamp_offset_ms)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [req.respondentId, idx + 1, e.type, e.productId || null, e.productName || null, e.productPrice ?? null, JSON.stringify(e.tags || []), e.cartTotal ?? null, e.tOffsetMs ?? null]
+      `INSERT INTO cart_sim_events (respondent_id, event_seq, event_type, product_id, product_name, product_price, product_tags, cart_total_at_event, timestamp_offset_ms, meta)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [req.respondentId, idx + 1, e.type, e.productId || null, e.productName || null, e.productPrice ?? null, JSON.stringify(e.tags || []), e.cartTotal ?? null, e.tOffsetMs ?? null, e.meta || null]
     );
   }
   res.json({ ok: true });
@@ -181,20 +181,26 @@ router.put('/respondents/:uuid/cart-summary', requireRespondent, asyncRoute(asyn
   const b = req.body || {};
   await query(
     `INSERT INTO cart_sim_summary (respondent_id, final_cart_total, final_item_count, planned_items_added, unplanned_items_added,
-       crossed_free_delivery_threshold, items_added_after_threshold_nudge, clicked_scarcity_item, clicked_recommended_item,
-       clicked_festive_item, clicked_bought_earlier_item, total_time_ms, noticed_fees)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       crossed_free_delivery_threshold, items_added_after_threshold_nudge, items_added_after_any_checkout_view,
+       checkout_view_count, shop_return_count, categories_browsed_count, categories_browsed,
+       clicked_scarcity_item, clicked_recommended_item, clicked_festive_item, clicked_bought_earlier_item,
+       total_time_ms, noticed_fees)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
      ON CONFLICT (respondent_id) DO UPDATE SET final_cart_total=excluded.final_cart_total, final_item_count=excluded.final_item_count,
        planned_items_added=excluded.planned_items_added, unplanned_items_added=excluded.unplanned_items_added,
        crossed_free_delivery_threshold=excluded.crossed_free_delivery_threshold,
        items_added_after_threshold_nudge=excluded.items_added_after_threshold_nudge,
+       items_added_after_any_checkout_view=excluded.items_added_after_any_checkout_view,
+       checkout_view_count=excluded.checkout_view_count, shop_return_count=excluded.shop_return_count,
+       categories_browsed_count=excluded.categories_browsed_count, categories_browsed=excluded.categories_browsed,
        clicked_scarcity_item=excluded.clicked_scarcity_item, clicked_recommended_item=excluded.clicked_recommended_item,
        clicked_festive_item=excluded.clicked_festive_item, clicked_bought_earlier_item=excluded.clicked_bought_earlier_item,
        total_time_ms=excluded.total_time_ms, noticed_fees=excluded.noticed_fees`,
     [
       req.respondentId, b.finalCartTotal, b.finalItemCount, b.plannedItemsAdded, b.unplannedItemsAdded,
-      b.crossedFreeDeliveryThreshold ? 1 : 0, b.itemsAddedAfterThresholdNudge, b.clickedScarcityItem ? 1 : 0,
-      b.clickedRecommendedItem ? 1 : 0, b.clickedFestiveItem ? 1 : 0, b.clickedBoughtEarlierItem ? 1 : 0,
+      b.crossedFreeDeliveryThreshold ? 1 : 0, b.itemsAddedAfterThresholdNudge, b.itemsAddedAfterAnyCheckoutView,
+      b.checkoutViewCount, b.shopReturnCount, b.categoriesBrowsedCount, JSON.stringify(b.categoriesBrowsed || []),
+      b.clickedScarcityItem ? 1 : 0, b.clickedRecommendedItem ? 1 : 0, b.clickedFestiveItem ? 1 : 0, b.clickedBoughtEarlierItem ? 1 : 0,
       b.totalTimeMs, b.noticedFees === null || b.noticedFees === undefined ? null : (b.noticedFees ? 1 : 0),
     ]
   );

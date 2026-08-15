@@ -8,9 +8,11 @@ const ICONS = {
 
 // The behavioural centrepiece: a real, clickable mini shopping app. The respondent is
 // sent to "buy milk and eggs" and everything they do beyond that — every scarcity-tagged
-// add, every threshold-chasing add, every recommendation click — is logged as revealed
-// behaviour, not self-report. This gives an actual unplanned-share-of-basket number to
-// set alongside the self-reported one from Section 3.
+// add, every threshold-chasing add, every recommendation click, every trip back and
+// forth between shop and checkout — is logged as revealed behaviour, not self-report.
+// Every event carries the cart total AND the running checkout-view count at that
+// instant, so the full "saw the fee, went back, added more" path is directly queryable
+// rather than something that has to be inferred after the fact.
 //
 // All mutable state lives on ctx.state.cartSim (created once, reused on every re-mount)
 // so navigating back to an earlier step and forward again — or revisiting this step —
@@ -23,12 +25,16 @@ export default function renderCartSim(container, ctx) {
     activeCategory: 'All',
     nudgeShown: false,
     itemsAddedAfterNudge: 0,
+    itemsAddedAfterAnyCheckoutView: 0,
+    checkoutViewCount: 0,
+    shopReturnCount: 0,
+    categoriesBrowsed: [], // ordered, de-duplicated on push
     clicked: { scarcity: false, recommended: false, festive: false, boughtEarlier: false },
     simStart: performance.now(),
     noticedValue: null,
   });
 
-  function log(type, product) {
+  function log(type, product, meta) {
     s.events.push({
       type,
       productId: product?.id || null,
@@ -37,6 +43,7 @@ export default function renderCartSim(container, ctx) {
       tags: product?.tags || [],
       cartTotal: cartTotal(),
       tOffsetMs: Math.round(performance.now() - s.simStart),
+      meta: meta ? JSON.stringify(meta) : null,
     });
   }
 
@@ -47,20 +54,40 @@ export default function renderCartSim(container, ctx) {
     return Object.values(s.cart).reduce((a, b) => a + b, 0);
   }
 
+  // Fires a `threshold_crossed` event the instant an add/remove moves the cart total
+  // across the free-delivery (₹149) or small-cart-waiver (₹99) line, in either
+  // direction — the exact moment a fee did or didn't apply changes.
+  function logThresholdCrossings(prevTotal, newTotal) {
+    for (const [name, line] of [['free_delivery', FREE_DELIVERY_THRESHOLD], ['small_cart_waiver', SMALL_CART_WAIVER]]) {
+      const wasAbove = prevTotal >= line;
+      const isAbove = newTotal >= line;
+      if (wasAbove !== isAbove) {
+        log('threshold_crossed', null, { threshold: name, direction: isAbove ? 'crossed_above' : 'crossed_below', prevTotal, newTotal });
+      }
+    }
+  }
+
   function addOne(product) {
+    const prevTotal = cartTotal();
     s.cart[product.id] = (s.cart[product.id] || 0) + 1;
-    log('add_to_cart', product);
+    const newTotal = cartTotal();
+    logThresholdCrossings(prevTotal, newTotal);
+    log('add_to_cart', product, { checkoutViewsSoFar: s.checkoutViewCount, shopReturnsSoFar: s.shopReturnCount });
     if (product.tags.includes('scarcity')) s.clicked.scarcity = true;
     if (product.tags.includes('recommended')) s.clicked.recommended = true;
     if (product.tags.includes('festive')) s.clicked.festive = true;
     if (product.tags.includes('boughtEarlier')) s.clicked.boughtEarlier = true;
     if (s.nudgeShown) s.itemsAddedAfterNudge += 1;
+    if (s.checkoutViewCount > 0) s.itemsAddedAfterAnyCheckoutView += 1;
   }
   function removeOne(product) {
     if (!s.cart[product.id]) return;
+    const prevTotal = cartTotal();
     s.cart[product.id] -= 1;
     if (s.cart[product.id] <= 0) delete s.cart[product.id];
-    log('remove_from_cart', product);
+    const newTotal = cartTotal();
+    logThresholdCrossings(prevTotal, newTotal);
+    log('remove_from_cart', product, { checkoutViewsSoFar: s.checkoutViewCount, shopReturnsSoFar: s.shopReturnCount });
   }
 
   function fees(total) {
@@ -87,7 +114,17 @@ export default function renderCartSim(container, ctx) {
     ]);
 
     const catbar = el('div', { class: 'sim-catbar' }, CATEGORIES.map((cat) =>
-      el('button', { class: 'sim-catchip' + (s.activeCategory === cat ? ' is-active' : ''), onClick: () => { s.activeCategory = cat; render(); } }, cat)
+      el('button', {
+        class: 'sim-catchip' + (s.activeCategory === cat ? ' is-active' : ''),
+        onClick: () => {
+          if (cat !== s.activeCategory) {
+            log('category_filter', null, { category: cat });
+            if (!s.categoriesBrowsed.includes(cat)) s.categoriesBrowsed.push(cat);
+          }
+          s.activeCategory = cat;
+          render();
+        },
+      }, cat)
     ));
 
     const visible = CATALOG.filter((p) => s.activeCategory === 'All' || p.category === s.activeCategory);
@@ -99,7 +136,10 @@ export default function renderCartSim(container, ctx) {
         el('div', { class: 'sim-cartbar__total' }, `${cartCount()} item${cartCount() === 1 ? '' : 's'} · ${formatRupee(cartTotal())}`),
         el('div', { class: 'sim-cartbar__sub' }, hasEssentials ? 'Milk & eggs added ✓' : 'Add milk & eggs to continue'),
       ]),
-      el('button', { class: 'btn btn--accent btn--sm', disabled: !hasEssentials, onClick: () => { s.screen = 'checkout'; render(); } }, 'View cart →'),
+      el('button', { class: 'btn btn--accent btn--sm', disabled: !hasEssentials, onClick: () => {
+        s.screen = 'checkout';
+        render();
+      } }, 'View cart →'),
     ]);
 
     return el('div', { class: 'step' }, [
@@ -142,7 +182,10 @@ export default function renderCartSim(container, ctx) {
     const total = cartTotal();
     const f = fees(total);
     if (total < FREE_DELIVERY_THRESHOLD) s.nudgeShown = true;
-    if (s.events.length === 0 || s.events[s.events.length - 1].type !== 'checkout_viewed') log('checkout_viewed', null);
+    if (s.events.length === 0 || s.events[s.events.length - 1].type !== 'checkout_viewed') {
+      s.checkoutViewCount += 1;
+      log('checkout_viewed', null, { visitNumber: s.checkoutViewCount });
+    }
 
     const lines = CATALOG.filter((p) => s.cart[p.id]).map((p) =>
       el('div', { class: 'checkout-line' }, [el('span', {}, `${p.name} × ${s.cart[p.id]}`), el('span', {}, formatRupee(p.price * s.cart[p.id]))])
@@ -159,7 +202,7 @@ export default function renderCartSim(container, ctx) {
     ]);
 
     const placeBtn = el('button', { class: 'btn btn--accent btn--block', style: 'margin-top:4px', disabled: !s.noticedValue, onClick: async () => {
-      log('place_order', null);
+      log('place_order', null, { checkoutViewCount: s.checkoutViewCount, shopReturnCount: s.shopReturnCount });
       const finalTotal = cartTotal();
       const summary = {
         finalCartTotal: finalTotal,
@@ -168,6 +211,11 @@ export default function renderCartSim(container, ctx) {
         unplannedItemsAdded: CATALOG.filter((p) => !p.tags.includes('planned')).reduce((sum, p) => sum + (s.cart[p.id] || 0), 0),
         crossedFreeDeliveryThreshold: finalTotal >= FREE_DELIVERY_THRESHOLD,
         itemsAddedAfterThresholdNudge: s.itemsAddedAfterNudge,
+        itemsAddedAfterAnyCheckoutView: s.itemsAddedAfterAnyCheckoutView,
+        checkoutViewCount: s.checkoutViewCount,
+        shopReturnCount: s.shopReturnCount,
+        categoriesBrowsedCount: s.categoriesBrowsed.length,
+        categoriesBrowsed: s.categoriesBrowsed,
         clickedScarcityItem: s.clicked.scarcity,
         clickedRecommendedItem: s.clicked.recommended,
         clickedFestiveItem: s.clicked.festive,
@@ -197,7 +245,12 @@ export default function renderCartSim(container, ctx) {
         noticedWrap,
       ]),
       el('div', { class: 'step-actions' }, [
-        el('button', { class: 'btn btn--ghost', onClick: () => { s.screen = 'shop'; render(); } }, '← Back to shop'),
+        el('button', { class: 'btn btn--ghost', onClick: () => {
+          s.shopReturnCount += 1;
+          log('back_to_shop', null, { fromCartTotal: total, returnNumber: s.shopReturnCount });
+          s.screen = 'shop';
+          render();
+        } }, '← Back to shop'),
       ]),
       placeBtn,
     ]);
