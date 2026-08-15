@@ -22,7 +22,7 @@ export default function renderDemographics(container, ctx) {
   ]);
 
   const { node, refreshDisabled } = stepShell({
-    eyebrow: 'Part 1 of 11',
+    eyebrow: 'Part 1 of 4',
     title: 'A little about yourself',
     lede: 'This helps us understand how impulse buying differs across groups — nothing here identifies you personally.',
     body,

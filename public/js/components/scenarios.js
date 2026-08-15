@@ -154,7 +154,7 @@ export default function renderScenarios(container, ctx) {
 
     const wrap = el('div', { class: 'step' }, [
       el('div', { class: 'card' }, [
-        el('div', { class: 'eyebrow' }, `Part 3 of 11 · Scenario ${idx + 1} of ${SCENARIOS.length}`),
+        el('div', { class: 'eyebrow' }, `Part 3 of 4 · Scenario ${idx + 1} of ${SCENARIOS.length}`),
         dots,
         el('div', { class: 'situation' }, sc.situation),
         renderMock(sc.mock),

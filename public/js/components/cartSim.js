@@ -96,7 +96,7 @@ export default function renderCartSim(container, ctx) {
     ]);
 
     return el('div', { class: 'step' }, [
-      el('div', { class: 'eyebrow' }, 'Part 4 of 11 · A tiny shopping task'),
+      el('div', { class: 'eyebrow' }, 'Part 4 of 4 · A tiny shopping task'),
       task,
       el('div', { class: 'card card--flush', style: 'margin-top:12px' }, [
         topbar,
@@ -168,13 +168,14 @@ export default function renderCartSim(container, ctx) {
       };
       await ctx.api.saveCartEvents(ctx.state.uuid, events);
       await ctx.api.saveCartSummary(ctx.state.uuid, summary);
+      await ctx.api.complete(ctx.state.uuid);
       ctx.goNext();
     } }, 'Place order');
 
     function refreshPlace() { placeBtn.disabled = !noticedValue; }
 
     return el('div', { class: 'step' }, [
-      el('div', { class: 'eyebrow' }, 'Part 4 of 11 · Checkout'),
+      el('div', { class: 'eyebrow' }, 'Part 4 of 4 · Checkout'),
       el('div', { class: 'card' }, [
         el('h2', {}, 'Your cart'),
         el('div', { style: 'margin: 10px 0' }, lines),

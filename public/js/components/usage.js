@@ -37,7 +37,7 @@ export default function renderUsage(container, ctx) {
   ]);
 
   const { node, refreshDisabled } = stepShell({
-    eyebrow: 'Part 2 of 11',
+    eyebrow: 'Part 2 of 4',
     title: 'How you actually use these apps',
     body,
     onBack: ctx.goBack,
