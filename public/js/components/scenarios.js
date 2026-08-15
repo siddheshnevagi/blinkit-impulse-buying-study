@@ -92,13 +92,6 @@ function renderMock(mock) {
         el('div', { class: 'phone__search', style: 'margin:0 0 10px' }, 'Search: "cyucbwkd..."'),
         el('div', { class: 'sim-grid' }, mock.items.map((n) => productCard({ icon: '🍬', name: n, price: null, badge: 'Bought earlier', badgeClass: '' }))),
       ]));
-    case 'popup_offer':
-      return phoneFrame(greenHeader('8 mins'), el('div', { class: 'popup-sheet' }, el('div', { class: 'popup-sheet__panel' }, [
-        el('div', { style: 'font-size:32px' }, '🛵'),
-        el('h3', { style: 'margin-top:8px' }, mock.headline),
-        el('p', { class: 'lede' }, mock.condition),
-        el('div', { class: 'mock-btn', style: 'margin-top:12px' }, 'Got it, thanks!'),
-      ])));
     default:
       return el('div');
   }

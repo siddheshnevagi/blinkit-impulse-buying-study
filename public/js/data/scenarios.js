@@ -62,13 +62,4 @@ export const SCENARIOS = [
     mock: { type: 'bought_earlier', items: ['KitKat', 'Kinder Joy', 'Munch'] },
     likelihood: 'I would add one of these familiar items even though I searched for something else.',
   },
-  {
-    code: 'E8',
-    trigger: 'unsolicited_promo',
-    hypotheses: ['H2', 'H8'],
-    situation: 'The moment you open the app, a full-screen pop-up greets you: "Special offer for you! Now pay ₹0 charges on all orders above ₹149."',
-    mock: { type: 'popup_offer', headline: 'Now pay ₹0 charges*', condition: 'on all orders above ₹149' },
-    likelihood: 'This offer would make me add more items to reach ₹149, even if I opened the app for one thing.',
-    optional: true,
-  },
 ];
