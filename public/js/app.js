@@ -2,8 +2,6 @@ import { api, createRespondent } from './api.js';
 import { clear, setProgress } from './ui.js';
 
 import renderLanding from './components/landing.js';
-import renderConsent from './components/consent.js';
-import renderScreening from './components/screening.js';
 import renderDemographics from './components/demographics.js';
 import renderUsage from './components/usage.js';
 import renderOrderHistory from './components/orderHistory.js';
@@ -16,8 +14,6 @@ import renderThankyou from './components/thankyou.js';
 
 const STEPS = [
   { id: 'landing', mount: renderLanding, progress: 0 },
-  { id: 'consent', mount: renderConsent, progress: 4 },
-  { id: 'screening', mount: renderScreening, progress: 8 },
   { id: 'demographics', mount: renderDemographics, progress: 14 },
   { id: 'usage', mount: renderUsage, progress: 20 },
   { id: 'orderHistory', mount: renderOrderHistory, progress: 28 },
