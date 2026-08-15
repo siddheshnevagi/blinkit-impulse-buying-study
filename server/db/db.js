@@ -11,9 +11,20 @@ const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 // POSTGRES_URL is what Vercel's native Supabase integration injects (already the
 // pooled/serverless-safe connection string). DATABASE_URL is kept as a fallback so the
 // same code works with a manually-configured Postgres/Supabase connection.
-const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+let connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 if (!connectionString) {
   console.warn('POSTGRES_URL / DATABASE_URL is not set — database calls will fail until one is configured.');
+}
+
+// Supabase's pooler connection string embeds `sslmode=require`, which makes the `pg`
+// driver derive its own strict SSL settings from the URL and ignore/override the
+// explicit `ssl` option below — causing a "self-signed certificate in certificate
+// chain" error even with rejectUnauthorized:false. Stripping sslmode here and driving
+// SSL purely through the explicit option below avoids that conflict.
+if (connectionString) {
+  const u = new URL(connectionString);
+  u.searchParams.delete('sslmode');
+  connectionString = u.toString();
 }
 
 const pool = new pg.Pool({
