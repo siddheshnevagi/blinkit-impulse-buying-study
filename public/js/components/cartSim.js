@@ -96,7 +96,7 @@ export default function renderCartSim(container, ctx) {
     ]);
 
     return el('div', { class: 'step' }, [
-      el('div', { class: 'eyebrow' }, 'Part 5 of 12 · A tiny shopping task'),
+      el('div', { class: 'eyebrow' }, 'Part 4 of 11 · A tiny shopping task'),
       task,
       el('div', { class: 'card card--flush', style: 'margin-top:12px' }, [
         topbar,
@@ -174,7 +174,7 @@ export default function renderCartSim(container, ctx) {
     function refreshPlace() { placeBtn.disabled = !noticedValue; }
 
     return el('div', { class: 'step' }, [
-      el('div', { class: 'eyebrow' }, 'Part 5 of 12 · Checkout'),
+      el('div', { class: 'eyebrow' }, 'Part 4 of 11 · Checkout'),
       el('div', { class: 'card' }, [
         el('h2', {}, 'Your cart'),
         el('div', { style: 'margin: 10px 0' }, lines),

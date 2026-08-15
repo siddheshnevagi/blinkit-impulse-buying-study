@@ -2,9 +2,7 @@ import { el, stepShell, pillGroup } from '../ui.js';
 
 const AGE_GROUPS = ['18–24', '25–34', '35–44', '45+'];
 const GENDERS = ['Female', 'Male', 'Prefer to self-describe / not say'];
-const CITY_TYPES = ['Metro', 'Tier-1', 'Tier-2', 'Tier-3 / other'];
 const OCCUPATIONS = ['Student', 'Working professional', 'Self-employed', 'Homemaker', 'Other'];
-const INCOME_BANDS = ['< ₹10k', '₹10k–25k', '₹25k–50k', '₹50k–1L', '> ₹1L'];
 
 export default function renderDemographics(container, ctx) {
   const d = ctx.state.profile;
@@ -20,13 +18,11 @@ export default function renderDemographics(container, ctx) {
   const body = el('div', {}, [
     field('Age group', null, AGE_GROUPS, 'ageGroup'),
     field('Gender', null, GENDERS, 'gender'),
-    field('Where do you live?', null, CITY_TYPES, 'cityType'),
     field('Occupation', null, OCCUPATIONS, 'occupation'),
-    field('Monthly personal spending money / income', 'A rough band is fine.', INCOME_BANDS, 'incomeBand'),
   ]);
 
   const { node, refreshDisabled } = stepShell({
-    eyebrow: 'Part 1 of 12',
+    eyebrow: 'Part 1 of 11',
     title: 'A little about yourself',
     lede: 'This helps us understand how impulse buying differs across groups — nothing here identifies you personally.',
     body,
@@ -35,7 +31,7 @@ export default function renderDemographics(container, ctx) {
       await ctx.api.saveProfile(ctx.state.uuid, d);
       ctx.goNext();
     },
-    nextDisabled: () => !(d.ageGroup && d.gender && d.cityType && d.occupation && d.incomeBand),
+    nextDisabled: () => !(d.ageGroup && d.gender && d.occupation),
   });
   container.appendChild(node);
 }

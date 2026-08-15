@@ -71,7 +71,7 @@ export default function renderExperiment(container, ctx) {
 
   const wrap = el('div', { class: 'step' }, [
     el('div', { class: 'card' }, [
-      el('div', { class: 'eyebrow' }, 'Part 6 of 12 · One product, one decision'),
+      el('div', { class: 'eyebrow' }, 'Part 5 of 11 · One product, one decision'),
       el('h1', {}, 'Imagine you\'re scrolling and you see this'),
       el('p', { class: 'lede', style: 'margin-bottom:14px' }, 'Look at it the way you actually would — no need to overthink.'),
       phone,

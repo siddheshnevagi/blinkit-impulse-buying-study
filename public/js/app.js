@@ -4,7 +4,6 @@ import { clear, setProgress } from './ui.js';
 import renderLanding from './components/landing.js';
 import renderDemographics from './components/demographics.js';
 import renderUsage from './components/usage.js';
-import renderOrderHistory from './components/orderHistory.js';
 import renderScenarios from './components/scenarios.js';
 import renderCartSim from './components/cartSim.js';
 import renderExperiment from './components/experiment.js';
@@ -14,17 +13,16 @@ import renderThankyou from './components/thankyou.js';
 
 const STEPS = [
   { id: 'landing', mount: renderLanding, progress: 0 },
-  { id: 'demographics', mount: renderDemographics, progress: 14 },
-  { id: 'usage', mount: renderUsage, progress: 20 },
-  { id: 'orderHistory', mount: renderOrderHistory, progress: 28 },
-  { id: 'scenarios', mount: renderScenarios, progress: 38 },
+  { id: 'demographics', mount: renderDemographics, progress: 15 },
+  { id: 'usage', mount: renderUsage, progress: 24 },
+  { id: 'scenarios', mount: renderScenarios, progress: 36 },
   { id: 'cartSim', mount: renderCartSim, progress: 52 },
   { id: 'experiment', mount: renderExperiment, progress: 64 },
-  { id: 'likert-stimuli', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['SC', 'PR', 'CV', 'PN'], eyebrow: 'Part 7 of 12', title: 'What catches your eye', lede: 'Thinking about quick-commerce apps in general — how much do you agree with each statement?' }), progress: 74 },
-  { id: 'likert-organism', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['AR', 'EN'], eyebrow: 'Part 8 of 12', title: 'How it makes you feel', lede: 'Still thinking generally about these apps.' }), progress: 80 },
-  { id: 'likert-trait', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['IBT', 'SCTL'], eyebrow: 'Part 9 of 12', title: 'Your shopping style', lede: 'These are about you in general — not just on Blinkit.' }), progress: 86 },
-  { id: 'likert-response', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['UBI', 'IB'], eyebrow: 'Part 10 of 12', title: 'Back to Blinkit specifically', lede: '' }), progress: 92 },
-  { id: 'likert-welfare', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['RG'], eyebrow: 'Part 11 of 12', title: 'The morning after', lede: 'How you tend to feel once the order has arrived.' }), progress: 96 },
+  { id: 'likert-stimuli', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['SC', 'PR', 'CV', 'PN'], eyebrow: 'Part 6 of 11', title: 'What catches your eye', lede: 'Thinking about quick-commerce apps in general — how much do you agree with each statement?' }), progress: 74 },
+  { id: 'likert-organism', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['AR', 'EN'], eyebrow: 'Part 7 of 11', title: 'How it makes you feel', lede: 'Still thinking generally about these apps.' }), progress: 80 },
+  { id: 'likert-trait', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['IBT', 'SCTL'], eyebrow: 'Part 8 of 11', title: 'Your shopping style', lede: 'These are about you in general — not just on Blinkit.' }), progress: 86 },
+  { id: 'likert-response', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['UBI', 'IB'], eyebrow: 'Part 9 of 11', title: 'Back to Blinkit specifically', lede: '' }), progress: 92 },
+  { id: 'likert-welfare', mount: (c, ctx) => renderLikertBattery(c, ctx, { sections: ['RG'], eyebrow: 'Part 10 of 11', title: 'The morning after', lede: 'How you tend to feel once the order has arrived.' }), progress: 96 },
   { id: 'debrief', mount: renderDebrief, progress: 98 },
   { id: 'thankyou', mount: renderThankyou, progress: 100 },
 ];
@@ -37,7 +35,6 @@ const state = {
   screenedOut: false,
   profile: {},
   usage: {},
-  orderHistory: {},
   cart: {},
 };
 

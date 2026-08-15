@@ -19,7 +19,7 @@ export default function renderDebrief(container, ctx) {
   ]);
 
   const { node } = stepShell({
-    eyebrow: 'Part 12 of 12',
+    eyebrow: 'Part 11 of 11',
     title: 'In your own words',
     body,
     onBack: ctx.goBack,
