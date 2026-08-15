@@ -106,28 +106,34 @@ function renderMock(mock) {
 
 export default function renderScenarios(container, ctx) {
   ctx.state.scenarioIndex ??= 0;
+  // Answers already given, keyed by scenario code — survives re-mounting the step
+  // (e.g. navigating back to an earlier scenario, or leaving and returning), so a
+  // previous selection is always shown pre-selected rather than reset to blank.
+  ctx.state.scenarioAnswers ??= {};
 
   function mount() {
     const idx = ctx.state.scenarioIndex;
     const sc = SCENARIOS[idx];
     clear(container);
 
+    const saved = ctx.state.scenarioAnswers[sc.code];
     const shownAt = performance.now();
-    let firstAnswerAt = null;
-    let likelihoodAnswered = false;
+    let firstAnswerAt = saved ? 0 : null;
+    let likelihoodAnswered = !!saved;
     let likelihoodChanged = false;
-    let likelihoodValue = null;
+    let likelihoodValue = saved ? saved.likelihood : null;
 
     const dots = el('div', { class: 'scenario-progress' }, SCENARIOS.map((_, i) =>
       el('div', { class: 'scenario-progress__dot' + (i < idx ? ' is-done' : i === idx ? ' is-current' : '') })
     ));
 
     const nextBtn = el('button', { class: 'btn btn--accent' }, idx === SCENARIOS.length - 1 ? 'Continue' : 'Next scenario');
-    nextBtn.disabled = true;
+    nextBtn.disabled = !likelihoodAnswered;
 
     const likelihoodRow = likertRow({
       text: sc.likelihood,
       leftLabel: 'Very unlikely', rightLabel: 'Very likely',
+      initialValue: likelihoodValue,
       onAnswer: (v) => {
         if (firstAnswerAt === null) firstAnswerAt = performance.now();
         else likelihoodChanged = likelihoodAnswered ? true : likelihoodChanged;
@@ -155,12 +161,14 @@ export default function renderScenarios(container, ctx) {
     ]);
 
     nextBtn.addEventListener('click', async () => {
-      const decisionTimeMs = firstAnswerAt ? Math.round(firstAnswerAt - shownAt) : null;
+      const decisionTimeMs = saved ? saved.decisionTimeMs : (firstAnswerAt ? Math.round(firstAnswerAt - shownAt) : null);
+      const changedMind = (saved && saved.changedMind) || likelihoodChanged;
+      ctx.state.scenarioAnswers[sc.code] = { likelihood: likelihoodValue, decisionTimeMs, changedMind };
       await ctx.api.saveScenario(ctx.state.uuid, {
         scenarioCode: sc.code,
         likelihood: likelihoodValue,
         decisionTimeMs,
-        changedMind: likelihoodChanged,
+        changedMind,
       });
       if (idx === SCENARIOS.length - 1) ctx.goNext();
       else { ctx.state.scenarioIndex += 1; mount(); }

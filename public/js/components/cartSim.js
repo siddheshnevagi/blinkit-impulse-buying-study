@@ -11,48 +11,55 @@ const ICONS = {
 // add, every threshold-chasing add, every recommendation click — is logged as revealed
 // behaviour, not self-report. This gives an actual unplanned-share-of-basket number to
 // set alongside the self-reported one from Section 3.
+//
+// All mutable state lives on ctx.state.cartSim (created once, reused on every re-mount)
+// so navigating back to an earlier step and forward again — or revisiting this step —
+// never loses the cart, the click flags, or the checkout answer.
 export default function renderCartSim(container, ctx) {
-  const cart = {}; // productId -> qty
-  const events = [];
-  const simStart = performance.now();
-  let activeCategory = 'All';
-  let screen = 'shop';
-  let nudgeShown = false;
-  let itemsAddedAfterNudge = 0;
-  const clicked = { scarcity: false, recommended: false, festive: false, boughtEarlier: false };
+  const s = (ctx.state.cartSim ??= {
+    cart: {}, // productId -> qty
+    events: [],
+    screen: 'shop',
+    activeCategory: 'All',
+    nudgeShown: false,
+    itemsAddedAfterNudge: 0,
+    clicked: { scarcity: false, recommended: false, festive: false, boughtEarlier: false },
+    simStart: performance.now(),
+    noticedValue: null,
+  });
 
   function log(type, product) {
-    events.push({
+    s.events.push({
       type,
       productId: product?.id || null,
       productName: product?.name || null,
       productPrice: product?.price ?? null,
       tags: product?.tags || [],
       cartTotal: cartTotal(),
-      tOffsetMs: Math.round(performance.now() - simStart),
+      tOffsetMs: Math.round(performance.now() - s.simStart),
     });
   }
 
   function cartTotal() {
-    return CATALOG.reduce((sum, p) => sum + (cart[p.id] || 0) * p.price, 0);
+    return CATALOG.reduce((sum, p) => sum + (s.cart[p.id] || 0) * p.price, 0);
   }
   function cartCount() {
-    return Object.values(cart).reduce((a, b) => a + b, 0);
+    return Object.values(s.cart).reduce((a, b) => a + b, 0);
   }
 
   function addOne(product) {
-    cart[product.id] = (cart[product.id] || 0) + 1;
+    s.cart[product.id] = (s.cart[product.id] || 0) + 1;
     log('add_to_cart', product);
-    if (product.tags.includes('scarcity')) clicked.scarcity = true;
-    if (product.tags.includes('recommended')) clicked.recommended = true;
-    if (product.tags.includes('festive')) clicked.festive = true;
-    if (product.tags.includes('boughtEarlier')) clicked.boughtEarlier = true;
-    if (nudgeShown) itemsAddedAfterNudge += 1;
+    if (product.tags.includes('scarcity')) s.clicked.scarcity = true;
+    if (product.tags.includes('recommended')) s.clicked.recommended = true;
+    if (product.tags.includes('festive')) s.clicked.festive = true;
+    if (product.tags.includes('boughtEarlier')) s.clicked.boughtEarlier = true;
+    if (s.nudgeShown) s.itemsAddedAfterNudge += 1;
   }
   function removeOne(product) {
-    if (!cart[product.id]) return;
-    cart[product.id] -= 1;
-    if (cart[product.id] <= 0) delete cart[product.id];
+    if (!s.cart[product.id]) return;
+    s.cart[product.id] -= 1;
+    if (s.cart[product.id] <= 0) delete s.cart[product.id];
     log('remove_from_cart', product);
   }
 
@@ -65,7 +72,7 @@ export default function renderCartSim(container, ctx) {
 
   function render() {
     clear(container);
-    container.appendChild(screen === 'shop' ? renderShop() : renderCheckout());
+    container.appendChild(s.screen === 'shop' ? renderShop() : renderCheckout());
   }
 
   function renderShop() {
@@ -80,23 +87,26 @@ export default function renderCartSim(container, ctx) {
     ]);
 
     const catbar = el('div', { class: 'sim-catbar' }, CATEGORIES.map((cat) =>
-      el('button', { class: 'sim-catchip' + (activeCategory === cat ? ' is-active' : ''), onClick: () => { activeCategory = cat; render(); } }, cat)
+      el('button', { class: 'sim-catchip' + (s.activeCategory === cat ? ' is-active' : ''), onClick: () => { s.activeCategory = cat; render(); } }, cat)
     ));
 
-    const visible = CATALOG.filter((p) => activeCategory === 'All' || p.category === activeCategory);
+    const visible = CATALOG.filter((p) => s.activeCategory === 'All' || p.category === s.activeCategory);
     const grid = el('div', { class: 'sim-grid' }, visible.map((p) => renderProductCard(p)));
 
-    const hasEssentials = (cart.milk || 0) > 0 && (cart.eggs || 0) > 0;
+    const hasEssentials = (s.cart.milk || 0) > 0 && (s.cart.eggs || 0) > 0;
     const cartBar = el('div', { class: 'sim-cartbar' }, [
       el('div', {}, [
         el('div', { class: 'sim-cartbar__total' }, `${cartCount()} item${cartCount() === 1 ? '' : 's'} · ${formatRupee(cartTotal())}`),
         el('div', { class: 'sim-cartbar__sub' }, hasEssentials ? 'Milk & eggs added ✓' : 'Add milk & eggs to continue'),
       ]),
-      el('button', { class: 'btn btn--accent btn--sm', disabled: !hasEssentials, onClick: () => { screen = 'checkout'; render(); } }, 'View cart →'),
+      el('button', { class: 'btn btn--accent btn--sm', disabled: !hasEssentials, onClick: () => { s.screen = 'checkout'; render(); } }, 'View cart →'),
     ]);
 
     return el('div', { class: 'step' }, [
-      el('div', { class: 'eyebrow' }, 'Part 4 of 4 · A tiny shopping task'),
+      el('div', { style: 'display:flex; align-items:center; justify-content:space-between; gap:12px' }, [
+        el('div', { class: 'eyebrow', style: 'margin-bottom:0' }, 'Part 4 of 4 · A tiny shopping task'),
+        el('button', { class: 'btn btn--ghost btn--sm', onClick: ctx.goBack }, '← Back'),
+      ]),
       task,
       el('div', { class: 'card card--flush', style: 'margin-top:12px' }, [
         topbar,
@@ -108,7 +118,7 @@ export default function renderCartSim(container, ctx) {
   }
 
   function renderProductCard(p) {
-    const qty = cart[p.id] || 0;
+    const qty = s.cart[p.id] || 0;
     const badgeClass = p.tags.includes('scarcity') ? '' : p.tags.includes('festive') ? 'pcard__badge--fest' : 'pcard__badge--rec';
     return el('div', { class: 'pcard' }, [
       p.badge ? el('div', { class: `pcard__badge ${badgeClass}` }, p.badge) : null,
@@ -131,11 +141,11 @@ export default function renderCartSim(container, ctx) {
   function renderCheckout() {
     const total = cartTotal();
     const f = fees(total);
-    if (total < FREE_DELIVERY_THRESHOLD) nudgeShown = true;
-    if (events.length === 0 || events[events.length - 1].type !== 'checkout_viewed') log('checkout_viewed', null);
+    if (total < FREE_DELIVERY_THRESHOLD) s.nudgeShown = true;
+    if (s.events.length === 0 || s.events[s.events.length - 1].type !== 'checkout_viewed') log('checkout_viewed', null);
 
-    const lines = CATALOG.filter((p) => cart[p.id]).map((p) =>
-      el('div', { class: 'checkout-line' }, [el('span', {}, `${p.name} × ${cart[p.id]}`), el('span', {}, formatRupee(p.price * cart[p.id]))])
+    const lines = CATALOG.filter((p) => s.cart[p.id]).map((p) =>
+      el('div', { class: 'checkout-line' }, [el('span', {}, `${p.name} × ${s.cart[p.id]}`), el('span', {}, formatRupee(p.price * s.cart[p.id]))])
     );
 
     const nudge = total < FREE_DELIVERY_THRESHOLD ? el('div', { class: 'threshold-banner', style: 'margin-bottom:14px' }, [
@@ -143,36 +153,35 @@ export default function renderCartSim(container, ctx) {
       el('div', { class: 'threshold-track' }, el('div', { class: 'threshold-fill', style: `width:${Math.round((total / FREE_DELIVERY_THRESHOLD) * 100)}%` })),
     ]) : null;
 
-    let noticedValue = null;
     const noticedWrap = el('div', { class: 'field', style: 'margin-top:16px' }, [
       el('label', { class: 'field__label' }, 'Before you continue — did you notice how much the delivery, handling and small-cart charges added to your total just now?'),
-      pillGroup({ options: ['Yes, I noticed', 'No, I didn\'t check', 'I don\'t usually check'], value: () => noticedValue, onChange: (v) => { noticedValue = v; refreshPlace(); } }),
+      pillGroup({ options: ['Yes, I noticed', 'No, I didn\'t check', 'I don\'t usually check'], value: () => s.noticedValue, onChange: (v) => { s.noticedValue = v; refreshPlace(); } }),
     ]);
 
-    const placeBtn = el('button', { class: 'btn btn--accent btn--block', style: 'margin-top:4px', disabled: true, onClick: async () => {
+    const placeBtn = el('button', { class: 'btn btn--accent btn--block', style: 'margin-top:4px', disabled: !s.noticedValue, onClick: async () => {
       log('place_order', null);
       const finalTotal = cartTotal();
       const summary = {
         finalCartTotal: finalTotal,
         finalItemCount: cartCount(),
-        plannedItemsAdded: CATALOG.filter((p) => p.tags.includes('planned')).reduce((s, p) => s + (cart[p.id] || 0), 0),
-        unplannedItemsAdded: CATALOG.filter((p) => !p.tags.includes('planned')).reduce((s, p) => s + (cart[p.id] || 0), 0),
+        plannedItemsAdded: CATALOG.filter((p) => p.tags.includes('planned')).reduce((sum, p) => sum + (s.cart[p.id] || 0), 0),
+        unplannedItemsAdded: CATALOG.filter((p) => !p.tags.includes('planned')).reduce((sum, p) => sum + (s.cart[p.id] || 0), 0),
         crossedFreeDeliveryThreshold: finalTotal >= FREE_DELIVERY_THRESHOLD,
-        itemsAddedAfterThresholdNudge: itemsAddedAfterNudge,
-        clickedScarcityItem: clicked.scarcity,
-        clickedRecommendedItem: clicked.recommended,
-        clickedFestiveItem: clicked.festive,
-        clickedBoughtEarlierItem: clicked.boughtEarlier,
-        totalTimeMs: Math.round(performance.now() - simStart),
-        noticedFees: noticedValue === 'Yes, I noticed' ? true : noticedValue ? false : null,
+        itemsAddedAfterThresholdNudge: s.itemsAddedAfterNudge,
+        clickedScarcityItem: s.clicked.scarcity,
+        clickedRecommendedItem: s.clicked.recommended,
+        clickedFestiveItem: s.clicked.festive,
+        clickedBoughtEarlierItem: s.clicked.boughtEarlier,
+        totalTimeMs: Math.round(performance.now() - s.simStart),
+        noticedFees: s.noticedValue === 'Yes, I noticed' ? true : s.noticedValue ? false : null,
       };
-      await ctx.api.saveCartEvents(ctx.state.uuid, events);
+      await ctx.api.saveCartEvents(ctx.state.uuid, s.events);
       await ctx.api.saveCartSummary(ctx.state.uuid, summary);
       await ctx.api.complete(ctx.state.uuid);
       ctx.goNext();
     } }, 'Place order');
 
-    function refreshPlace() { placeBtn.disabled = !noticedValue; }
+    function refreshPlace() { placeBtn.disabled = !s.noticedValue; }
 
     return el('div', { class: 'step' }, [
       el('div', { class: 'eyebrow' }, 'Part 4 of 4 · Checkout'),
@@ -188,7 +197,7 @@ export default function renderCartSim(container, ctx) {
         noticedWrap,
       ]),
       el('div', { class: 'step-actions' }, [
-        el('button', { class: 'btn btn--ghost', onClick: () => { screen = 'shop'; render(); } }, '← Back to shop'),
+        el('button', { class: 'btn btn--ghost', onClick: () => { s.screen = 'shop'; render(); } }, '← Back to shop'),
       ]),
       placeBtn,
     ]);
