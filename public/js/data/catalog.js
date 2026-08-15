@@ -13,8 +13,8 @@ export const HANDLING_FEE = 5;
 export const SMALL_CART_FEE = 20;
 
 export const CATALOG = [
-  { id: 'milk', name: 'Amul Taaza Toned Milk', unit: '500 ml', price: 30, category: 'Dairy & Eggs', eta: '8 mins', tags: ['planned'] },
-  { id: 'eggs', name: 'Farm Fresh Eggs', unit: '6 pcs', price: 42, category: 'Dairy & Eggs', eta: '8 mins', tags: ['planned'] },
+  { id: 'milk', name: 'Amul Taaza Toned Milk', unit: '500 ml', price: 30, category: 'Dairy & Eggs', eta: '8 mins', tags: ['planned'], icon: '🥛' },
+  { id: 'eggs', name: 'Farm Fresh Eggs', unit: '6 pcs', price: 42, category: 'Dairy & Eggs', eta: '8 mins', tags: ['planned'], icon: '🥚' },
 
   { id: 'kitkat', name: 'Nestle KitKat 4 Finger', unit: '38.5 g', price: 30, category: 'Chocolates', eta: '8 mins', tags: ['recommended', 'boughtEarlier'], badge: 'Bought earlier' },
   { id: 'kurkure', name: 'Kurkure Masala Munch', unit: '75 g', price: 20, category: 'Snacks', eta: '8 mins', tags: ['scarcity'], badge: 'Only 3 left' },

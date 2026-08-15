@@ -162,7 +162,7 @@ export default function renderCartSim(container, ctx) {
     const badgeClass = p.tags.includes('scarcity') ? '' : p.tags.includes('festive') ? 'pcard__badge--fest' : 'pcard__badge--rec';
     return el('div', { class: 'pcard' }, [
       p.badge ? el('div', { class: `pcard__badge ${badgeClass}` }, p.badge) : null,
-      el('div', { class: 'pcard__img' }, ICONS[p.category] || '🛒'),
+      el('div', { class: 'pcard__img' }, p.icon || ICONS[p.category] || '🛒'),
       el('div', { class: 'pcard__name' }, p.name),
       el('div', { class: 'pcard__unit' }, `${p.unit} · ${p.eta}`),
       el('div', { class: 'pcard__row' }, [
