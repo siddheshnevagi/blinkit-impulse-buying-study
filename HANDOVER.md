@@ -93,7 +93,7 @@ webapp/
     index.html, css/styles.css
     js/app.js                 step router
     js/api.js                 API client (has a localStorage demo-mode fallback)
-    js/data/scenarios.js       the 7 scenarios — situation, mock UI, likelihood + organism text
+    js/data/scenarios.js       the 5 scenarios — situation, mock UI, likelihood + organism text
     js/data/catalog.js         cart-simulator product catalog + trigger tags
     js/data/items.js           Likert item definitions — no longer rendered anywhere,
                                 kept only because nothing currently reads it; safe to
@@ -192,6 +192,15 @@ First run against a fresh database: `curl -X POST http://localhost:3000/admin/ap
    removed. Added `item3_value`/`item4_value` columns to `scenario_responses` (additive
    migration, existing rows get NULL) and new construct-score + `II_composite` DV
    columns to the `Respondents_Wide` export sheet. Spec: `../Fresh Start/model2-survey-spec.md`.
+10. **Removed E3 (personalised recs / PP) and E4 (occasion priming / PA)** from the
+    live flow (2026-08-18), same day as Model 2 — now 5 scenarios instead of 7:
+    E1, E2, E5, E6, E7 (codes unchanged, not renumbered — same pattern as the earlier
+    E8 removal). `II_composite` is now the mean of these 5 scenarios' likelihood
+    ratings instead of 7. No schema change needed (`scenario_code` is free text).
+    Earlier respondents' E3/E4 answers (likelihood, organism, item3, item4) are
+    untouched in the database and still visible in the `Scenarios_Long` export sheet —
+    they just no longer appear in `Respondents_Wide` or `II_composite`, since both are
+    built dynamically from the current `SCENARIOS` array in `data/scenarios.js`.
 
 ## If you're picking this up cold
 

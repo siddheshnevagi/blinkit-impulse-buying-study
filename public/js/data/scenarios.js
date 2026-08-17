@@ -9,11 +9,16 @@
 //
 // `construct` is the S-O-R organism construct code the three organism items (organism,
 // item3, item4) jointly measure, per Fresh Start/model2-survey-spec.md:
-//   PU Perceived Urgency · PS Perceived Deal Smartness · PP Perceived Personalization/Ease
-//   PA Positive Affect/Mood · HT Heuristic Price Trust · NA Negative Affect/Irritation
-//   CE Perceived Cognitive Ease
+//   PU Perceived Urgency · PS Perceived Deal Smartness · HT Heuristic Price Trust
+//   NA Negative Affect/Irritation · CE Perceived Cognitive Ease
 // construct value for a respondent = mean(organism, item3, item4).
-// DV (II_composite) = mean of all 7 scenarios' `likelihood` ratings.
+// DV (II_composite) = mean of all 5 scenarios' `likelihood` ratings.
+//
+// E3 (personalised_recs, construct PP) and E4 (occasion_merchandising, construct PA)
+// were removed from the live flow (2026-08-18) — see HANDOVER.md changelog. Earlier
+// respondents' E3/E4 answers still exist in the DB and remain visible in the
+// Scenarios_Long export sheet; they no longer appear in Respondents_Wide or
+// II_composite going forward, since both are now built from this 5-scenario array.
 //
 // mock: describes the phone-mock UI so the renderer can build it without images.
 export const SCENARIOS = [
@@ -40,30 +45,6 @@ export const SCENARIOS = [
     organism: 'In this situation, adding another item feels like the smart thing to do.',
     item3: 'Reaching the free-delivery threshold felt like a small win.',
     item4: 'I felt I was getting more value for money by adding one more item.',
-  },
-  {
-    code: 'E3',
-    trigger: 'personalised_recs',
-    hypotheses: ['H5'],
-    construct: 'PP',
-    situation: 'At checkout, the app shows a "You might also like" row with three items matched to your past orders.',
-    mock: { type: 'recs', items: ['Chips', 'Choco bar', 'Cold drink'] },
-    likelihood: 'I would add at least one of these items.',
-    organism: 'These suggestions feel tailored to me, so adding one feels effortless.',
-    item3: 'The app seems to understand what I usually buy.',
-    item4: 'Choosing from this list felt easier than searching for something myself.',
-  },
-  {
-    code: 'E4',
-    trigger: 'occasion_merchandising',
-    hypotheses: ['H5'],
-    construct: 'PA',
-    situation: 'You open the app to buy milk. The home screen is taken over by a festive "Rakhi Specials" banner — rakhis, gifting combos, sweets — none of which you came for.',
-    mock: { type: 'festive_takeover', theme: 'Rakhi Specials', items: ['Kids Rakhi', 'Gifting combo', 'Festive sweets box'] },
-    likelihood: 'I would browse the festive rail even though I didn\'t come for it.',
-    organism: 'This puts me in a festive, celebratory mood.',
-    item3: 'Seeing this made me feel cheerful/upbeat.',
-    item4: 'I felt drawn to explore the offer even though I didn\'t need it.',
   },
   {
     code: 'E5',
