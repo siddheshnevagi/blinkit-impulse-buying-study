@@ -88,6 +88,13 @@ CREATE TABLE IF NOT EXISTS scenario_responses (
 -- this change; a no-op on fresh installs.
 ALTER TABLE scenario_responses DROP COLUMN IF EXISTS agreement_value;
 
+-- Reintroduced as a second question per scenario, this time measuring the Organism
+-- construct in the S-O-R model (felt urgency, mood, trust in a heuristic, annoyance,
+-- effortlessness) rather than generic "agreement" — a distinct measure from the
+-- likelihood/Response rating above. Purely additive: existing rows get NULL here and
+-- are otherwise untouched.
+ALTER TABLE scenario_responses ADD COLUMN IF NOT EXISTS organism_value INTEGER;
+
 CREATE TABLE IF NOT EXISTS experiment_responses (
   respondent_id             INTEGER PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,
   delivery_condition        TEXT,

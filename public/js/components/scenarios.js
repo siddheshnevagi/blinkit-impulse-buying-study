@@ -113,15 +113,21 @@ export default function renderScenarios(container, ctx) {
     const shownAt = performance.now();
     let firstAnswerAt = saved ? 0 : null;
     let likelihoodAnswered = !!saved;
-    let likelihoodChanged = false;
+    let organismAnswered = !!saved;
+    let changedMind = false;
     let likelihoodValue = saved ? saved.likelihood : null;
+    let organismValue = saved ? saved.organism : null;
 
     const dots = el('div', { class: 'scenario-progress' }, SCENARIOS.map((_, i) =>
       el('div', { class: 'scenario-progress__dot' + (i < idx ? ' is-done' : i === idx ? ' is-current' : '') })
     ));
 
     const nextBtn = el('button', { class: 'btn btn--accent' }, idx === SCENARIOS.length - 1 ? 'Continue' : 'Next scenario');
-    nextBtn.disabled = !likelihoodAnswered;
+    nextBtn.disabled = !(likelihoodAnswered && organismAnswered);
+
+    function maybeEnable() {
+      if (likelihoodAnswered && organismAnswered) nextBtn.disabled = false;
+    }
 
     const likelihoodRow = likertRow({
       text: sc.likelihood,
@@ -129,10 +135,22 @@ export default function renderScenarios(container, ctx) {
       initialValue: likelihoodValue,
       onAnswer: (v) => {
         if (firstAnswerAt === null) firstAnswerAt = performance.now();
-        else likelihoodChanged = likelihoodAnswered ? true : likelihoodChanged;
+        else changedMind = likelihoodAnswered ? true : changedMind;
         likelihoodAnswered = true;
         likelihoodValue = v;
-        nextBtn.disabled = false;
+        maybeEnable();
+      },
+    });
+    const organismRow = likertRow({
+      text: sc.organism,
+      leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree',
+      initialValue: organismValue,
+      onAnswer: (v) => {
+        if (firstAnswerAt === null) firstAnswerAt = performance.now();
+        else changedMind = organismAnswered ? true : changedMind;
+        organismAnswered = true;
+        organismValue = v;
+        maybeEnable();
       },
     });
 
@@ -142,7 +160,7 @@ export default function renderScenarios(container, ctx) {
         dots,
         el('div', { class: 'situation' }, sc.situation),
         renderMock(sc.mock),
-        el('div', { class: 'likert', style: 'margin-top:16px' }, [likelihoodRow]),
+        el('div', { class: 'likert', style: 'margin-top:16px' }, [likelihoodRow, organismRow]),
       ]),
       el('div', { class: 'step-actions' }, [
         el('button', { class: 'btn btn--ghost', onClick: () => {
@@ -155,13 +173,14 @@ export default function renderScenarios(container, ctx) {
 
     nextBtn.addEventListener('click', async () => {
       const decisionTimeMs = saved ? saved.decisionTimeMs : (firstAnswerAt ? Math.round(firstAnswerAt - shownAt) : null);
-      const changedMind = (saved && saved.changedMind) || likelihoodChanged;
-      ctx.state.scenarioAnswers[sc.code] = { likelihood: likelihoodValue, decisionTimeMs, changedMind };
+      const finalChangedMind = (saved && saved.changedMind) || changedMind;
+      ctx.state.scenarioAnswers[sc.code] = { likelihood: likelihoodValue, organism: organismValue, decisionTimeMs, changedMind: finalChangedMind };
       await ctx.api.saveScenario(ctx.state.uuid, {
         scenarioCode: sc.code,
         likelihood: likelihoodValue,
+        organism: organismValue,
         decisionTimeMs,
-        changedMind,
+        changedMind: finalChangedMind,
       });
       if (idx === SCENARIOS.length - 1) ctx.goNext();
       else { ctx.state.scenarioIndex += 1; mount(); }

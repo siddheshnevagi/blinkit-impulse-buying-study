@@ -55,8 +55,9 @@ export async function buildWorkbook() {
   codebook.addRow({ col: 'categories_bought', section: 'Usage habits', text: 'What they usually buy (multi-select)', scale: 'semicolon-separated list' });
   codebook.addRow({ col: 'unplanned_share_selfreport', section: 'Usage habits', text: 'Self-reported share of orders that are unplanned', scale: 'category (None / <25% / 25-50% / 50-75% / >75%)' });
   for (const sc of SCENARIOS) {
-    codebook.addRow({ col: `${sc.code}_likelihood`, section: `Scenario ${sc.code}`, text: sc.situation, scale: '1 Very unlikely – 5 Very likely' });
-    codebook.addRow({ col: `${sc.code}_decision_ms`, section: `Scenario ${sc.code}`, text: 'Time from scenario shown to answer (behavioural, indirect)', scale: 'milliseconds' });
+    codebook.addRow({ col: `${sc.code}_likelihood`, section: `Scenario ${sc.code} — Response`, text: sc.situation, scale: '1 Very unlikely – 5 Very likely' });
+    codebook.addRow({ col: `${sc.code}_organism`, section: `Scenario ${sc.code} — Organism`, text: sc.organism, scale: '1 Strongly disagree – 5 Strongly agree' });
+    codebook.addRow({ col: `${sc.code}_decision_ms`, section: `Scenario ${sc.code}`, text: 'Time from scenario shown to first answer (behavioural, indirect)', scale: 'milliseconds' });
   }
   codebook.addRow({ col: 'cart_final_total / cart_final_item_count', section: 'Cart simulator', text: 'Final basket at "Place order"', scale: '₹ / count' });
   codebook.addRow({ col: 'cart_planned_items_added / cart_unplanned_items_added', section: 'Cart simulator', text: 'Milk+eggs (planned) vs. everything else added (unplanned) — revealed, not self-reported', scale: 'count' });
@@ -90,6 +91,7 @@ export async function buildWorkbook() {
   ];
   const scenarioCols = allScenarioCodes.flatMap((code) => [
     { header: `${code}_likelihood`, key: `${code}_likelihood`, width: 14 },
+    { header: `${code}_organism`, key: `${code}_organism`, width: 14 },
     { header: `${code}_decision_ms`, key: `${code}_decision_ms`, width: 16 },
   ]);
   const cartCols = [
@@ -142,6 +144,7 @@ export async function buildWorkbook() {
     for (const code of allScenarioCodes) {
       const s = scenarioMap[code];
       rowObj[`${code}_likelihood`] = s ? s.likelihood_value : null;
+      rowObj[`${code}_organism`] = s ? s.organism_value : null;
       rowObj[`${code}_decision_ms`] = s ? s.decision_time_ms : null;
     }
 
@@ -154,6 +157,7 @@ export async function buildWorkbook() {
     { header: 'respondent_id', key: 'respondent_id', width: 12 },
     { header: 'scenario_code', key: 'scenario_code', width: 12 },
     { header: 'likelihood_value', key: 'likelihood_value', width: 14 },
+    { header: 'organism_value', key: 'organism_value', width: 14 },
     { header: 'decision_time_ms', key: 'decision_time_ms', width: 16 },
     { header: 'changed_mind', key: 'changed_mind', width: 12 },
   ];
