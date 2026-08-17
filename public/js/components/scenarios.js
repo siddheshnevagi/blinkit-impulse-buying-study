@@ -112,47 +112,49 @@ export default function renderScenarios(container, ctx) {
     const saved = ctx.state.scenarioAnswers[sc.code];
     const shownAt = performance.now();
     let firstAnswerAt = saved ? 0 : null;
-    let likelihoodAnswered = !!saved;
-    let organismAnswered = !!saved;
     let changedMind = false;
-    let likelihoodValue = saved ? saved.likelihood : null;
-    let organismValue = saved ? saved.organism : null;
+
+    // Four items per scenario: item1 (likelihood, feeds the DV) plus three organism
+    // items (organism/item3/item4) that jointly measure this scenario's construct
+    // (mean of the three = the construct score, e.g. PU, PS, PP — see data/scenarios.js).
+    const items = [
+      { key: 'likelihood', text: sc.likelihood, leftLabel: 'Very unlikely', rightLabel: 'Very likely' },
+      { key: 'organism', text: sc.organism, leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree' },
+      { key: 'item3', text: sc.item3, leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree' },
+      { key: 'item4', text: sc.item4, leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree' },
+    ];
+    const answered = {};
+    const values = {};
+    for (const it of items) {
+      answered[it.key] = !!saved;
+      values[it.key] = saved ? saved[it.key] : null;
+    }
 
     const dots = el('div', { class: 'scenario-progress' }, SCENARIOS.map((_, i) =>
       el('div', { class: 'scenario-progress__dot' + (i < idx ? ' is-done' : i === idx ? ' is-current' : '') })
     ));
 
+    const allAnswered = () => items.every((it) => answered[it.key]);
+
     const nextBtn = el('button', { class: 'btn btn--accent' }, idx === SCENARIOS.length - 1 ? 'Continue' : 'Next scenario');
-    nextBtn.disabled = !(likelihoodAnswered && organismAnswered);
+    nextBtn.disabled = !allAnswered();
 
     function maybeEnable() {
-      if (likelihoodAnswered && organismAnswered) nextBtn.disabled = false;
+      if (allAnswered()) nextBtn.disabled = false;
     }
 
-    const likelihoodRow = likertRow({
-      text: sc.likelihood,
-      leftLabel: 'Very unlikely', rightLabel: 'Very likely',
-      initialValue: likelihoodValue,
+    const rows = items.map((it) => likertRow({
+      text: it.text,
+      leftLabel: it.leftLabel, rightLabel: it.rightLabel,
+      initialValue: values[it.key],
       onAnswer: (v) => {
         if (firstAnswerAt === null) firstAnswerAt = performance.now();
-        else changedMind = likelihoodAnswered ? true : changedMind;
-        likelihoodAnswered = true;
-        likelihoodValue = v;
+        else changedMind = answered[it.key] ? true : changedMind;
+        answered[it.key] = true;
+        values[it.key] = v;
         maybeEnable();
       },
-    });
-    const organismRow = likertRow({
-      text: sc.organism,
-      leftLabel: 'Strongly disagree', rightLabel: 'Strongly agree',
-      initialValue: organismValue,
-      onAnswer: (v) => {
-        if (firstAnswerAt === null) firstAnswerAt = performance.now();
-        else changedMind = organismAnswered ? true : changedMind;
-        organismAnswered = true;
-        organismValue = v;
-        maybeEnable();
-      },
-    });
+    }));
 
     const wrap = el('div', { class: 'step' }, [
       el('div', { class: 'card' }, [
@@ -160,7 +162,7 @@ export default function renderScenarios(container, ctx) {
         dots,
         el('div', { class: 'situation' }, sc.situation),
         renderMock(sc.mock),
-        el('div', { class: 'likert', style: 'margin-top:16px' }, [likelihoodRow, organismRow]),
+        el('div', { class: 'likert', style: 'margin-top:16px' }, rows),
       ]),
       el('div', { class: 'step-actions' }, [
         el('button', { class: 'btn btn--ghost', onClick: () => {
@@ -174,11 +176,16 @@ export default function renderScenarios(container, ctx) {
     nextBtn.addEventListener('click', async () => {
       const decisionTimeMs = saved ? saved.decisionTimeMs : (firstAnswerAt ? Math.round(firstAnswerAt - shownAt) : null);
       const finalChangedMind = (saved && saved.changedMind) || changedMind;
-      ctx.state.scenarioAnswers[sc.code] = { likelihood: likelihoodValue, organism: organismValue, decisionTimeMs, changedMind: finalChangedMind };
+      ctx.state.scenarioAnswers[sc.code] = {
+        likelihood: values.likelihood, organism: values.organism, item3: values.item3, item4: values.item4,
+        decisionTimeMs, changedMind: finalChangedMind,
+      };
       await ctx.api.saveScenario(ctx.state.uuid, {
         scenarioCode: sc.code,
-        likelihood: likelihoodValue,
-        organism: organismValue,
+        likelihood: values.likelihood,
+        organism: values.organism,
+        item3: values.item3,
+        item4: values.item4,
         decisionTimeMs,
         changedMind: finalChangedMind,
       });

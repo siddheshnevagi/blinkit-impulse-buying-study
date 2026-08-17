@@ -110,7 +110,8 @@ live flow. They exist (for `/admin/api/migrate` idempotency and to avoid a risky
 code. Don't be confused by their presence:
 
 **Actively used:** `respondents`, `profile`, `usage_habits`, `scenario_responses`
-(now includes `organism_value`), `cart_sim_summary`, `cart_sim_events`.
+(now includes `organism_value`, `item3_value`, `item4_value` — see "Model 2" below),
+`cart_sim_summary`, `cart_sim_events`.
 
 **Legacy / always empty going forward:** `order_history_meta`, `order_history_items`,
 `likert_responses`, `experiment_responses`, `debrief`. The Excel export
@@ -184,6 +185,13 @@ First run against a fresh database: `curl -X POST http://localhost:3000/admin/ap
    effortlessness) rather than generic "agreement" — distinct wording per scenario,
    added as a new `organism_value` column via an additive migration that left all
    prior respondent data untouched.
+9. **"Model 2" (2026-08-18):** each scenario's single Organism item is now backed by
+   3 items instead of 1 — the existing item plus 2 new ones, all measuring the same
+   construct (`PU`/`PS`/`PP`/`PA`/`HT`/`NA`/`CE`, one per scenario). New items render
+   directly below the existing 2 on the same scenario screen; nothing moved or was
+   removed. Added `item3_value`/`item4_value` columns to `scenario_responses` (additive
+   migration, existing rows get NULL) and new construct-score + `II_composite` DV
+   columns to the `Respondents_Wide` export sheet. Spec: `../Fresh Start/model2-survey-spec.md`.
 
 ## If you're picking this up cold
 

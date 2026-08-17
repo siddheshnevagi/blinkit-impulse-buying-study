@@ -95,6 +95,14 @@ ALTER TABLE scenario_responses DROP COLUMN IF EXISTS agreement_value;
 -- are otherwise untouched.
 ALTER TABLE scenario_responses ADD COLUMN IF NOT EXISTS organism_value INTEGER;
 
+-- Model 2 (Fresh Start/model2-survey-spec.md): each scenario's single Organism item
+-- (organism_value) is joined by two more items measuring the same construct, so each
+-- construct (PU/PS/PP/PA/HT/NA/CE) is built from 3 items instead of 1 —
+-- construct_value = mean(organism_value, item3_value, item4_value). Purely additive:
+-- existing rows get NULL for both and are otherwise untouched.
+ALTER TABLE scenario_responses ADD COLUMN IF NOT EXISTS item3_value INTEGER;
+ALTER TABLE scenario_responses ADD COLUMN IF NOT EXISTS item4_value INTEGER;
+
 CREATE TABLE IF NOT EXISTS experiment_responses (
   respondent_id             INTEGER PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,
   delivery_condition        TEXT,

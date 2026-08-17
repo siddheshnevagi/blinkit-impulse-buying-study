@@ -55,10 +55,14 @@ export async function buildWorkbook() {
   codebook.addRow({ col: 'categories_bought', section: 'Usage habits', text: 'What they usually buy (multi-select)', scale: 'semicolon-separated list' });
   codebook.addRow({ col: 'unplanned_share_selfreport', section: 'Usage habits', text: 'Self-reported share of orders that are unplanned', scale: 'category (None / <25% / 25-50% / 50-75% / >75%)' });
   for (const sc of SCENARIOS) {
-    codebook.addRow({ col: `${sc.code}_likelihood`, section: `Scenario ${sc.code} — Response`, text: sc.situation, scale: '1 Very unlikely – 5 Very likely' });
-    codebook.addRow({ col: `${sc.code}_organism`, section: `Scenario ${sc.code} — Organism`, text: sc.organism, scale: '1 Strongly disagree – 5 Strongly agree' });
+    codebook.addRow({ col: `${sc.code}_likelihood`, section: `Scenario ${sc.code} — Response (item 1)`, text: sc.situation, scale: '1 Very unlikely – 5 Very likely' });
+    codebook.addRow({ col: `${sc.code}_organism`, section: `Scenario ${sc.code} — Organism (item 2)`, text: sc.organism, scale: '1 Strongly disagree – 5 Strongly agree' });
+    codebook.addRow({ col: `${sc.code}_item3`, section: `Scenario ${sc.code} — Organism (item 3)`, text: sc.item3, scale: '1 Strongly disagree – 5 Strongly agree' });
+    codebook.addRow({ col: `${sc.code}_item4`, section: `Scenario ${sc.code} — Organism (item 4)`, text: sc.item4, scale: '1 Strongly disagree – 5 Strongly agree' });
     codebook.addRow({ col: `${sc.code}_decision_ms`, section: `Scenario ${sc.code}`, text: 'Time from scenario shown to first answer (behavioural, indirect)', scale: 'milliseconds' });
   }
+  codebook.addRow({ col: 'PU / PS / PP / PA / HT / NA / CE', section: 'Model 2 — construct scores', text: 'Organism construct score per scenario = mean of that scenario\'s 3 organism items (organism + item3 + item4). PU=Perceived Urgency (E1), PS=Perceived Deal Smartness (E2), PP=Perceived Personalization/Ease (E3), PA=Positive Affect/Mood (E4), HT=Heuristic Price Trust (E5), NA=Negative Affect/Irritation (E6), CE=Perceived Cognitive Ease (E7)', scale: '1–5 (mean of 3 items)' });
+  codebook.addRow({ col: 'II_composite', section: 'Model 2 — dependent variable', text: 'Impulse purchase intention composite = mean of all 7 scenarios\' likelihood (item 1) ratings. Regress on PU..CE per Fresh Start/model2-survey-spec.md', scale: '1–5 (mean of 7 items)' });
   codebook.addRow({ col: 'cart_final_total / cart_final_item_count', section: 'Cart simulator', text: 'Final basket at "Place order"', scale: '₹ / count' });
   codebook.addRow({ col: 'cart_planned_items_added / cart_unplanned_items_added', section: 'Cart simulator', text: 'Milk+eggs (planned) vs. everything else added (unplanned) — revealed, not self-reported', scale: 'count' });
   codebook.addRow({ col: 'cart_crossed_free_delivery_threshold', section: 'Cart simulator', text: 'Whether the final basket reached ₹149 (free delivery)', scale: '0/1' });
@@ -92,8 +96,14 @@ export async function buildWorkbook() {
   const scenarioCols = allScenarioCodes.flatMap((code) => [
     { header: `${code}_likelihood`, key: `${code}_likelihood`, width: 14 },
     { header: `${code}_organism`, key: `${code}_organism`, width: 14 },
+    { header: `${code}_item3`, key: `${code}_item3`, width: 14 },
+    { header: `${code}_item4`, key: `${code}_item4`, width: 14 },
     { header: `${code}_decision_ms`, key: `${code}_decision_ms`, width: 16 },
   ]);
+  // Model 2 construct scores (one per scenario, mean of that scenario's 3 organism
+  // items) plus the DV composite (mean of all 7 likelihood items).
+  const constructCols = SCENARIOS.map((sc) => ({ header: sc.construct, key: sc.construct, width: 10 }));
+  const dvCols = [{ header: 'II_composite', key: 'II_composite', width: 14 }];
   const cartCols = [
     { header: 'cart_final_total', key: 'cart_final_total', width: 14 },
     { header: 'cart_final_item_count', key: 'cart_final_item_count', width: 16 },
@@ -114,7 +124,7 @@ export async function buildWorkbook() {
     { header: 'cart_noticed_fees', key: 'cart_noticed_fees', width: 14 },
   ];
 
-  wide.columns = [...baseCols, ...scenarioCols, ...cartCols];
+  wide.columns = [...baseCols, ...scenarioCols, ...constructCols, ...dvCols, ...cartCols];
   styleHeader(wide.getRow(1));
   wide.views = [{ state: 'frozen', ySplit: 1, xSplit: 2 }];
 
@@ -141,12 +151,26 @@ export async function buildWorkbook() {
       cart_clicked_festive_item: cs.clicked_festive_item, cart_clicked_bought_earlier_item: cs.clicked_bought_earlier_item,
       cart_total_time_ms: cs.total_time_ms, cart_noticed_fees: cs.noticed_fees,
     };
-    for (const code of allScenarioCodes) {
+    const likelihoodValues = [];
+    for (const sc of SCENARIOS) {
+      const code = sc.code;
       const s = scenarioMap[code];
       rowObj[`${code}_likelihood`] = s ? s.likelihood_value : null;
       rowObj[`${code}_organism`] = s ? s.organism_value : null;
+      rowObj[`${code}_item3`] = s ? s.item3_value : null;
+      rowObj[`${code}_item4`] = s ? s.item4_value : null;
       rowObj[`${code}_decision_ms`] = s ? s.decision_time_ms : null;
+
+      const organismItems = [s?.organism_value, s?.item3_value, s?.item4_value];
+      rowObj[sc.construct] = organismItems.every((v) => v !== null && v !== undefined)
+        ? organismItems.reduce((a, b) => a + b, 0) / organismItems.length
+        : null;
+
+      if (s && s.likelihood_value !== null && s.likelihood_value !== undefined) likelihoodValues.push(s.likelihood_value);
     }
+    rowObj.II_composite = likelihoodValues.length === SCENARIOS.length
+      ? likelihoodValues.reduce((a, b) => a + b, 0) / likelihoodValues.length
+      : null;
 
     wide.addRow(rowObj);
   }
@@ -158,6 +182,8 @@ export async function buildWorkbook() {
     { header: 'scenario_code', key: 'scenario_code', width: 12 },
     { header: 'likelihood_value', key: 'likelihood_value', width: 14 },
     { header: 'organism_value', key: 'organism_value', width: 14 },
+    { header: 'item3_value', key: 'item3_value', width: 14 },
+    { header: 'item4_value', key: 'item4_value', width: 14 },
     { header: 'decision_time_ms', key: 'decision_time_ms', width: 16 },
     { header: 'changed_mind', key: 'changed_mind', width: 12 },
   ];
